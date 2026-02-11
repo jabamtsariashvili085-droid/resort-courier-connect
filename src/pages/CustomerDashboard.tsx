@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useI18n } from '@/i18n/I18nProvider';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Package, Plus, Clock, CheckCircle, MapPin, User, Settings, LogOut, History } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import CreateOrderForm from '@/components/CreateOrderForm';
 
-const mockOrders = [
+const initialOrders = [
   { id: '1001', type: 'parcel', status: 'inProgress', from: 'თბილისი', to: 'ბათუმი', price: 15, date: '2026-02-10' },
   { id: '1002', type: 'pharmacy', status: 'delivered', from: 'აფთიაქი N1', to: 'სასტუმრო ვარდი', price: 8, date: '2026-02-09' },
   { id: '1003', type: 'shopping', status: 'pending', from: 'სუპერმარკეტი', to: 'კოტეჯი #12', price: 12, date: '2026-02-11' },
@@ -14,6 +15,8 @@ const mockOrders = [
 const CustomerDashboard: React.FC = () => {
   const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<'orders' | 'history' | 'profile' | 'settings'>('orders');
+  const [showOrderForm, setShowOrderForm] = useState(false);
+  const [orders, setOrders] = useState(initialOrders);
 
   const statusColors: Record<string, string> = {
     pending: 'bg-accent/20 text-accent-foreground',
@@ -28,6 +31,14 @@ const CustomerDashboard: React.FC = () => {
     { id: 'profile' as const, label: t.dashboard.profile, icon: User },
     { id: 'settings' as const, label: t.dashboard.settings, icon: Settings },
   ];
+
+  const handleOrderCreated = (order: any) => {
+    setOrders(prev => [order, ...prev]);
+  };
+
+  const activeOrders = orders.filter(o => o.status !== 'delivered');
+  const deliveredCount = orders.filter(o => o.status === 'delivered').length;
+  const totalSpent = orders.reduce((sum, o) => sum + o.price, 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -50,12 +61,7 @@ const CustomerDashboard: React.FC = () => {
       </header>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Welcome */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <h1 className="text-3xl font-display font-bold text-foreground">
             {t.dashboard.welcome}, <span className="text-gradient-gold">გიორგი</span>
           </h1>
@@ -64,18 +70,12 @@ const CustomerDashboard: React.FC = () => {
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
-            { label: t.dashboard.myOrders, value: '12', icon: Package },
-            { label: t.dashboard.activeDeliveries, value: '2', icon: Clock },
-            { label: t.dashboard.status.delivered, value: '10', icon: CheckCircle },
-            { label: t.dashboard.earnings, value: `156 ${t.currency}`, icon: MapPin },
+            { label: t.dashboard.myOrders, value: String(orders.length), icon: Package },
+            { label: t.dashboard.activeDeliveries, value: String(activeOrders.length), icon: Clock },
+            { label: t.dashboard.status.delivered, value: String(deliveredCount), icon: CheckCircle },
+            { label: t.dashboard.earnings, value: `${totalSpent} ${t.currency}`, icon: MapPin },
           ].map((stat, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className="glass-card-elevated rounded-xl p-4"
-            >
+            <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="glass-card-elevated rounded-xl p-4">
               <stat.icon className="w-5 h-5 text-primary mb-2" />
               <p className="text-2xl font-bold text-foreground">{stat.value}</p>
               <p className="text-xs text-muted-foreground">{stat.label}</p>
@@ -86,15 +86,7 @@ const CustomerDashboard: React.FC = () => {
         {/* Tabs */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
           {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
-                activeTab === tab.id
-                  ? 'gradient-hero text-primary-foreground shadow-glow'
-                  : 'bg-muted text-muted-foreground hover:text-foreground'
-              }`}
-            >
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${activeTab === tab.id ? 'gradient-hero text-primary-foreground shadow-glow' : 'bg-muted text-muted-foreground hover:text-foreground'}`}>
               <tab.icon className="w-4 h-4" />
               {tab.label}
             </button>
@@ -107,6 +99,7 @@ const CustomerDashboard: React.FC = () => {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              onClick={() => setShowOrderForm(true)}
               className="w-full glass-card-elevated rounded-xl p-4 flex items-center gap-3 border-2 border-dashed border-primary/30 hover:border-primary/60 transition-colors"
             >
               <div className="w-10 h-10 rounded-full gradient-gold flex items-center justify-center">
@@ -115,14 +108,8 @@ const CustomerDashboard: React.FC = () => {
               <span className="font-semibold text-foreground">{t.dashboard.newOrder}</span>
             </motion.button>
 
-            {mockOrders.map((order, i) => (
-              <motion.div
-                key={order.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className="glass-card-elevated rounded-xl p-4"
-              >
+            {orders.map((order, i) => (
+              <motion.div key={order.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }} className="glass-card-elevated rounded-xl p-4">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-mono text-muted-foreground">#{order.id}</span>
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusColors[order.status]}`}>
@@ -147,15 +134,13 @@ const CustomerDashboard: React.FC = () => {
         {activeTab === 'profile' && (
           <div className="glass-card-elevated rounded-xl p-6">
             <h3 className="font-display text-xl font-bold text-foreground mb-4">{t.dashboard.profile}</h3>
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full gradient-hero flex items-center justify-center">
-                  <User className="w-8 h-8 text-primary-foreground" />
-                </div>
-                <div>
-                  <p className="font-semibold text-foreground">გიორგი მელაძე</p>
-                  <p className="text-sm text-muted-foreground">giorgi@example.com</p>
-                </div>
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-full gradient-hero flex items-center justify-center">
+                <User className="w-8 h-8 text-primary-foreground" />
+              </div>
+              <div>
+                <p className="font-semibold text-foreground">გიორგი მელაძე</p>
+                <p className="text-sm text-muted-foreground">giorgi@example.com</p>
               </div>
             </div>
           </div>
@@ -167,6 +152,13 @@ const CustomerDashboard: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Order Form Modal */}
+      <AnimatePresence>
+        {showOrderForm && (
+          <CreateOrderForm onClose={() => setShowOrderForm(false)} onOrderCreated={handleOrderCreated} />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
