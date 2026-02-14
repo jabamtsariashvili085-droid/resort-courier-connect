@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useI18n } from '@/i18n/I18nProvider';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, Plus, Clock, CheckCircle, MapPin, User, Settings, LogOut, History } from 'lucide-react';
+import { Package, Plus, Clock, CheckCircle, MapPin, User, Settings, LogOut, History, Navigation } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import CreateOrderForm from '@/components/CreateOrderForm';
+import OrderTracking from '@/components/OrderTracking';
 
 const initialOrders = [
   { id: '1001', type: 'parcel', status: 'inProgress', from: 'თბილისი', to: 'ბათუმი', price: 15, date: '2026-02-10' },
@@ -16,6 +17,7 @@ const CustomerDashboard: React.FC = () => {
   const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<'orders' | 'history' | 'profile' | 'settings'>('orders');
   const [showOrderForm, setShowOrderForm] = useState(false);
+  const [trackingOrder, setTrackingOrder] = useState<typeof initialOrders[0] | null>(null);
   const [orders, setOrders] = useState(initialOrders);
 
   const statusColors: Record<string, string> = {
@@ -124,7 +126,18 @@ const CustomerDashboard: React.FC = () => {
                 </div>
                 <div className="flex items-center justify-between mt-2">
                   <span className="text-xs text-muted-foreground">{order.date}</span>
-                  <span className="font-bold text-foreground">{order.price} {t.currency}</span>
+                  <div className="flex items-center gap-2">
+                    {order.status !== 'delivered' && (
+                      <button
+                        onClick={() => setTrackingOrder(order)}
+                        className="flex items-center gap-1 px-3 py-1 rounded-lg bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
+                      >
+                        <Navigation className="w-3 h-3" />
+                        {t.tracking.trackOrder}
+                      </button>
+                    )}
+                    <span className="font-bold text-foreground">{order.price} {t.currency}</span>
+                  </div>
                 </div>
               </motion.div>
             ))}
@@ -157,6 +170,9 @@ const CustomerDashboard: React.FC = () => {
       <AnimatePresence>
         {showOrderForm && (
           <CreateOrderForm onClose={() => setShowOrderForm(false)} onOrderCreated={handleOrderCreated} />
+        )}
+        {trackingOrder && (
+          <OrderTracking order={trackingOrder} onClose={() => setTrackingOrder(null)} />
         )}
       </AnimatePresence>
     </div>
