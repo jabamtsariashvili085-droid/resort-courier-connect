@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useI18n } from '@/i18n/I18nProvider';
 import { motion } from 'framer-motion';
@@ -15,6 +15,12 @@ const Auth: React.FC = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<'customer' | 'courier'>(initialRole);
+
+  // Sync role with URL params when switching between login/register
+  useEffect(() => {
+    const urlRole = searchParams.get('role') === 'courier' ? 'courier' : 'customer';
+    setRole(urlRole);
+  }, [searchParams]);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -56,9 +62,8 @@ const Auth: React.FC = () => {
             </div>
 
             {/* Role selector (register only) */}
-            {isRegister && (
-              <div className="mb-6">
-                <p className="text-sm text-muted-foreground mb-3">{t.auth.roleSelect}</p>
+            <div className="mb-6">
+              <p className="text-sm text-muted-foreground mb-3">{t.auth.roleSelect}</p>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
@@ -86,7 +91,6 @@ const Auth: React.FC = () => {
                   </button>
                 </div>
               </div>
-            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {isRegister && (
