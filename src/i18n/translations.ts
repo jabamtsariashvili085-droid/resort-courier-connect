@@ -108,6 +108,14 @@ export const translations = {
       enableNotifications: 'შეტყობინებების ჩართვა',
       notificationsEnabled: 'შეტყობინებები ჩართულია',
     },
+    rating: {
+      title: 'შეაფასეთ კურიერი',
+      submit: 'გაგზავნა',
+      thankYou: 'მადლობა!',
+      submitted: 'თქვენი შეფასება მიღებულია',
+      commentPlaceholder: 'დაწერეთ კომენტარი...',
+      labels: ['ცუდი', 'საშუალოზე დაბალი', 'საშუალო', 'კარგი', 'შესანიშნავი'],
+    },
     currency: '₾',
     footer: {
       rights: 'ყველა უფლება დაცულია',
@@ -222,6 +230,14 @@ export const translations = {
       notificationTitle: 'Order #{{id}}',
       enableNotifications: 'Enable Notifications',
       notificationsEnabled: 'Notifications Enabled',
+    },
+    rating: {
+      title: 'Rate Your Courier',
+      submit: 'Submit',
+      thankYou: 'Thank You!',
+      submitted: 'Your rating has been received',
+      commentPlaceholder: 'Leave a comment...',
+      labels: ['Poor', 'Below Average', 'Average', 'Good', 'Excellent'],
     },
     currency: '₾',
     footer: {
@@ -338,6 +354,14 @@ export const translations = {
       enableNotifications: 'Включить уведомления',
       notificationsEnabled: 'Уведомления включены',
     },
+    rating: {
+      title: 'Оцените курьера',
+      submit: 'Отправить',
+      thankYou: 'Спасибо!',
+      submitted: 'Ваша оценка получена',
+      commentPlaceholder: 'Оставьте комментарий...',
+      labels: ['Плохо', 'Ниже среднего', 'Средне', 'Хорошо', 'Отлично'],
+    },
     currency: '₾',
     footer: {
       rights: 'Все права защищены',
@@ -349,7 +373,7 @@ export const translations = {
 } as const;
 
 type DeepStringify<T> = {
-  [K in keyof T]: T[K] extends string ? string : DeepStringify<T[K]>;
+  [K in keyof T]: T[K] extends readonly string[] ? readonly string[] : T[K] extends string ? string : DeepStringify<T[K]>;
 };
 
 export type Translations = DeepStringify<typeof translations['en']>;
