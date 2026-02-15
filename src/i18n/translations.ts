@@ -104,6 +104,9 @@ export const translations = {
       minutes: 'წუთი',
       inProgress: 'მიმდინარეობს...',
       trackOrder: 'თრექინგი',
+      notificationTitle: 'შეკვეთა #{{id}}',
+      enableNotifications: 'შეტყობინებების ჩართვა',
+      notificationsEnabled: 'შეტყობინებები ჩართულია',
     },
     currency: '₾',
     footer: {
@@ -216,6 +219,9 @@ export const translations = {
       minutes: 'min',
       inProgress: 'In progress...',
       trackOrder: 'Track',
+      notificationTitle: 'Order #{{id}}',
+      enableNotifications: 'Enable Notifications',
+      notificationsEnabled: 'Notifications Enabled',
     },
     currency: '₾',
     footer: {
@@ -328,6 +334,9 @@ export const translations = {
       minutes: 'мин',
       inProgress: 'В процессе...',
       trackOrder: 'Отследить',
+      notificationTitle: 'Заказ #{{id}}',
+      enableNotifications: 'Включить уведомления',
+      notificationsEnabled: 'Уведомления включены',
     },
     currency: '₾',
     footer: {

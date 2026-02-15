@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useI18n } from '@/i18n/I18nProvider';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MapPin, Clock, Phone, Star, Bike, Package, CheckCircle, Navigation } from 'lucide-react';
+import { X, MapPin, Clock, Phone, Star, Bike, Package, CheckCircle, Navigation, Bell, BellOff } from 'lucide-react';
+import { requestPushPermission, notifyStatusChange } from '@/lib/notifications';
 
 interface OrderTrackingProps {
   order: {
@@ -26,8 +27,12 @@ const TRACKING_STEPS = [
 const OrderTracking: React.FC<OrderTrackingProps> = ({ order, onClose }) => {
   const { t } = useI18n();
   const [currentStep, setCurrentStep] = useState(0);
-  const [courierPosition, setCourierPosition] = useState(0); // 0-100 progress
-  const [eta, setEta] = useState(12); // minutes
+  const [courierPosition, setCourierPosition] = useState(0);
+  const [eta, setEta] = useState(12);
+  const [pushEnabled, setPushEnabled] = useState(() => 
+    'Notification' in window && Notification.permission === 'granted'
+  );
+  const prevStepRef = useRef(0);
 
   // Map order status to initial step
   useEffect(() => {
@@ -67,6 +72,22 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ order, onClose }) => {
     return () => clearInterval(interval);
   }, [order.status]);
 
+  // Notify on step change
+  useEffect(() => {
+    if (currentStep > prevStepRef.current) {
+      const stepKey = TRACKING_STEPS[currentStep]?.key;
+      const label = stepLabels[stepKey as keyof typeof stepLabels] || '';
+      const title = t.tracking.notificationTitle.replace('{{id}}', order.id);
+      notifyStatusChange(title, label);
+    }
+    prevStepRef.current = currentStep;
+  }, [currentStep]);
+
+  const handleEnablePush = async () => {
+    const granted = await requestPushPermission();
+    setPushEnabled(granted);
+  };
+
   const stepLabels = {
     confirmed: t.tracking.confirmed,
     pickedUp: t.tracking.pickedUp,
@@ -93,6 +114,14 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ order, onClose }) => {
         <div className="gradient-hero p-5 relative">
           <button onClick={onClose} className="absolute top-4 right-4 text-primary-foreground/80 hover:text-primary-foreground">
             <X className="w-5 h-5" />
+          </button>
+          {/* Push notification toggle */}
+          <button
+            onClick={handleEnablePush}
+            className="absolute top-4 right-12 text-primary-foreground/80 hover:text-primary-foreground"
+            title={pushEnabled ? t.tracking.notificationsEnabled : t.tracking.enableNotifications}
+          >
+            {pushEnabled ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
           </button>
           <p className="text-primary-foreground/70 text-sm font-mono">#{order.id}</p>
           <h2 className="text-xl font-display font-bold text-primary-foreground mt-1">
