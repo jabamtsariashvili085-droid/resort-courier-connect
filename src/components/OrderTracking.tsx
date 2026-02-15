@@ -3,6 +3,7 @@ import { useI18n } from '@/i18n/I18nProvider';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, MapPin, Clock, Phone, Star, Bike, Package, CheckCircle, Navigation, Bell, BellOff } from 'lucide-react';
 import { requestPushPermission, notifyStatusChange } from '@/lib/notifications';
+import CourierRating from './CourierRating';
 
 interface OrderTrackingProps {
   order: {
@@ -33,6 +34,7 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ order, onClose }) => {
     'Notification' in window && Notification.permission === 'granted'
   );
   const prevStepRef = useRef(0);
+  const [showRating, setShowRating] = useState(false);
 
   // Map order status to initial step
   useEffect(() => {
@@ -57,6 +59,7 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ order, onClose }) => {
           clearInterval(interval);
           setCurrentStep(3);
           setEta(0);
+          setTimeout(() => setShowRating(true), 1500);
           return 100;
         }
         // Update step based on progress
@@ -273,6 +276,17 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ order, onClose }) => {
           </div>
         </div>
       </motion.div>
+
+      {/* Rating Modal */}
+      <AnimatePresence>
+        {showRating && (
+          <CourierRating
+            orderId={order.id}
+            courierName="ნიკა ბ."
+            onClose={() => { setShowRating(false); onClose(); }}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
