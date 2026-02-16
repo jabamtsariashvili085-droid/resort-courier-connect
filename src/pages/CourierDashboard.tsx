@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useI18n } from '@/i18n/I18nProvider';
+import { useAuth } from '@/contexts/AuthContext';
 import { motion } from 'framer-motion';
-import { Package, Bike, Clock, CheckCircle, MapPin, User, Settings, LogOut, History, DollarSign } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Package, Bike, Clock, CheckCircle, MapPin, User, Settings, LogOut, History, DollarSign, Loader2 } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 const mockDeliveries = [
@@ -13,8 +14,20 @@ const mockDeliveries = [
 
 const CourierDashboard: React.FC = () => {
   const { t } = useI18n();
+  const { user, profile, loading, signOut } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'deliveries' | 'earnings' | 'profile' | 'settings'>('deliveries');
   const [isOnline, setIsOnline] = useState(true);
+
+  useEffect(() => {
+    if (!loading && !user) navigate('/auth');
+  }, [user, loading, navigate]);
+
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+    </div>
+  );
 
   const statusColors: Record<string, string> = {
     pending: 'bg-accent/20 text-accent-foreground',
@@ -54,9 +67,9 @@ const CourierDashboard: React.FC = () => {
               {isOnline ? '● Online' : '○ Offline'}
             </button>
             <LanguageSwitcher />
-            <Link to="/" className="text-muted-foreground hover:text-foreground">
+            <button onClick={() => signOut()} className="text-muted-foreground hover:text-foreground">
               <LogOut className="w-5 h-5" />
-            </Link>
+            </button>
           </div>
         </div>
       </header>
@@ -69,7 +82,7 @@ const CourierDashboard: React.FC = () => {
           className="mb-8"
         >
           <h1 className="text-3xl font-display font-bold text-foreground">
-            {t.dashboard.welcome}, <span className="text-gradient-gold">ნიკა</span>
+            {t.dashboard.welcome}, <span className="text-gradient-gold">{profile?.full_name || user?.email}</span>
           </h1>
           <p className="text-muted-foreground mt-1">
             <Bike className="w-4 h-4 inline mr-1" />
@@ -194,8 +207,8 @@ const CourierDashboard: React.FC = () => {
                 <Bike className="w-8 h-8 text-accent-foreground" />
               </div>
               <div>
-                <p className="font-semibold text-foreground">ნიკა ბერიძე</p>
-                <p className="text-sm text-muted-foreground">nika@example.com</p>
+                <p className="font-semibold text-foreground">{profile?.full_name || 'N/A'}</p>
+                <p className="text-sm text-muted-foreground">{user?.email}</p>
                 <p className="text-xs text-primary font-medium mt-1">{t.auth.asCourier}</p>
               </div>
             </div>
