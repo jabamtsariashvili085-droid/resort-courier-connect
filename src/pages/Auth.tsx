@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useI18n } from '@/i18n/I18nProvider';
+import { useAuth } from '@/contexts/AuthContext';
 import { motion } from 'framer-motion';
-import { Package, Eye, EyeOff, User, Bike } from 'lucide-react';
+import { Package, Eye, EyeOff, User, Bike, Loader2 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
-import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 const Auth: React.FC = () => {
   const { t } = useI18n();
+  const { signIn, signUp, user, userRole, loading } = useAuth();
   const [searchParams] = useSearchParams();
   const isRegister = searchParams.get('mode') === 'register';
   const initialRole = searchParams.get('role') === 'courier' ? 'courier' : 'customer';
@@ -15,12 +17,20 @@ const Auth: React.FC = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<'customer' | 'courier'>(initialRole);
+  const [submitting, setSubmitting] = useState(false);
 
-  // Sync role with URL params when switching between login/register
   useEffect(() => {
     const urlRole = searchParams.get('role') === 'courier' ? 'courier' : 'customer';
     setRole(urlRole);
   }, [searchParams]);
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!loading && user && userRole) {
+      navigate(userRole === 'courier' ? '/courier-dashboard' : '/customer-dashboard');
+    }
+  }, [user, userRole, loading, navigate]);
+
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -29,10 +39,32 @@ const Auth: React.FC = () => {
     confirmPassword: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Navigate to dashboard based on role (backend integration later)
-    navigate(role === 'courier' ? '/courier-dashboard' : '/customer-dashboard');
+    setSubmitting(true);
+
+    try {
+      if (isRegister) {
+        if (formData.password !== formData.confirmPassword) {
+          toast.error('Passwords do not match');
+          setSubmitting(false);
+          return;
+        }
+        const { error } = await signUp(formData.email, formData.password, formData.fullName, formData.phone, role);
+        if (error) {
+          toast.error(error.message);
+        } else {
+          toast.success('Registration successful! Check your email.');
+        }
+      } else {
+        const { error } = await signIn(formData.email, formData.password);
+        if (error) {
+          toast.error(error.message);
+        }
+      }
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const updateField = (field: string, value: string) => {
@@ -61,36 +93,36 @@ const Auth: React.FC = () => {
               </h1>
             </div>
 
-            {/* Role selector (register only) */}
+            {/* Role selector */}
             <div className="mb-6">
               <p className="text-sm text-muted-foreground mb-3">{t.auth.roleSelect}</p>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setRole('customer')}
-                    className={`flex items-center gap-2 p-3 rounded-xl border-2 transition-all ${
-                      role === 'customer'
-                        ? 'border-primary bg-primary/5 text-primary'
-                        : 'border-border text-muted-foreground hover:border-primary/30'
-                    }`}
-                  >
-                    <User className="w-5 h-5" />
-                    <span className="text-sm font-medium">{t.auth.asCustomer}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRole('courier')}
-                    className={`flex items-center gap-2 p-3 rounded-xl border-2 transition-all ${
-                      role === 'courier'
-                        ? 'border-primary bg-primary/5 text-primary'
-                        : 'border-border text-muted-foreground hover:border-primary/30'
-                    }`}
-                  >
-                    <Bike className="w-5 h-5" />
-                    <span className="text-sm font-medium">{t.auth.asCourier}</span>
-                  </button>
-                </div>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setRole('customer')}
+                  className={`flex items-center gap-2 p-3 rounded-xl border-2 transition-all ${
+                    role === 'customer'
+                      ? 'border-primary bg-primary/5 text-primary'
+                      : 'border-border text-muted-foreground hover:border-primary/30'
+                  }`}
+                >
+                  <User className="w-5 h-5" />
+                  <span className="text-sm font-medium">{t.auth.asCustomer}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRole('courier')}
+                  className={`flex items-center gap-2 p-3 rounded-xl border-2 transition-all ${
+                    role === 'courier'
+                      ? 'border-primary bg-primary/5 text-primary'
+                      : 'border-border text-muted-foreground hover:border-primary/30'
+                  }`}
+                >
+                  <Bike className="w-5 h-5" />
+                  <span className="text-sm font-medium">{t.auth.asCourier}</span>
+                </button>
               </div>
+            </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {isRegister && (
@@ -173,8 +205,10 @@ const Auth: React.FC = () => {
 
               <button
                 type="submit"
-                className="w-full py-3.5 rounded-xl gradient-hero text-primary-foreground font-semibold text-lg hover:opacity-90 transition-opacity glow-emerald"
+                disabled={submitting}
+                className="w-full py-3.5 rounded-xl gradient-hero text-primary-foreground font-semibold text-lg hover:opacity-90 transition-opacity glow-emerald disabled:opacity-50 flex items-center justify-center gap-2"
               >
+                {submitting && <Loader2 className="w-5 h-5 animate-spin" />}
                 {t.auth.submit}
               </button>
             </form>
