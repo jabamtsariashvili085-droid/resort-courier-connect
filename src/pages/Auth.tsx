@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
 import { useI18n } from '@/i18n/I18nProvider';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion } from 'framer-motion';
@@ -123,6 +124,32 @@ const Auth: React.FC = () => {
                 </button>
               </div>
             </div>
+
+            {/* Forgot password */}
+            {!isRegister && (
+              <div className="mb-2">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!formData.email) {
+                      toast.error(t.auth.enterEmailFirst);
+                      return;
+                    }
+                    const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {
+                      redirectTo: `${window.location.origin}/reset-password`,
+                    });
+                    if (error) {
+                      toast.error(error.message);
+                    } else {
+                      toast.success(t.auth.resetEmailSent);
+                    }
+                  }}
+                  className="text-sm text-primary hover:underline"
+                >
+                  {t.auth.forgotPassword}
+                </button>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {isRegister && (
