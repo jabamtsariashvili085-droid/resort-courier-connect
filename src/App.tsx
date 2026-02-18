@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import CustomerDashboard from "./pages/CustomerDashboard";
 import CourierDashboard from "./pages/CourierDashboard";
 import ResetPassword from "./pages/ResetPassword";
+import ProfileEdit from "./pages/ProfileEdit";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/profile" element={<ProfileEdit />} />
               <Route path="/customer-dashboard" element={<CustomerDashboard />} />
               <Route path="/courier-dashboard" element={<CourierDashboard />} />
               <Route path="*" element={<NotFound />} />
