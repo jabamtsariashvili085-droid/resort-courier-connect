@@ -161,14 +161,25 @@ const CustomerDashboard: React.FC = () => {
           <div className="glass-card-elevated rounded-xl p-6">
             <h3 className="font-display text-xl font-bold text-foreground mb-4">{t.dashboard.profile}</h3>
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full gradient-hero flex items-center justify-center">
-                <User className="w-8 h-8 text-primary-foreground" />
+              <div className="w-16 h-16 rounded-full gradient-hero flex items-center justify-center overflow-hidden">
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <User className="w-8 h-8 text-primary-foreground" />
+                )}
               </div>
               <div>
                 <p className="font-semibold text-foreground">{profile?.full_name || 'N/A'}</p>
                 <p className="text-sm text-muted-foreground">{user?.email}</p>
               </div>
             </div>
+            <Link
+              to="/profile"
+              className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors"
+            >
+              <Settings className="w-4 h-4" />
+              {t.profile.editTitle}
+            </Link>
           </div>
         )}
 
