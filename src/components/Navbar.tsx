@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useI18n } from '@/i18n/I18nProvider';
 import { useAuth } from '@/contexts/AuthContext';
 import LanguageSwitcher from './LanguageSwitcher';
-import { Package, Menu, X, LogOut } from 'lucide-react';
+import { Package, Menu, X, LogOut, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Navbar: React.FC = () => {
@@ -46,6 +46,13 @@ const Navbar: React.FC = () => {
                 className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
                 {t.nav.dashboard}
+              </Link>
+              <Link
+                to="/profile"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"
+              >
+                <User className="w-4 h-4" />
+                {t.dashboard.profile}
               </Link>
               <LanguageSwitcher />
               <button
@@ -100,6 +107,10 @@ const Navbar: React.FC = () => {
                 <>
                   <Link to={dashboardPath} onClick={() => setMobileOpen(false)} className="text-sm font-medium text-muted-foreground hover:text-foreground py-2">
                     {t.nav.dashboard}
+                  </Link>
+                  <Link to="/profile" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-muted-foreground hover:text-foreground py-2 flex items-center gap-1.5">
+                    <User className="w-4 h-4" />
+                    {t.dashboard.profile}
                   </Link>
                   <button onClick={() => { handleSignOut(); setMobileOpen(false); }} className="text-sm font-medium text-muted-foreground hover:text-foreground py-2 text-left flex items-center gap-1.5">
                     <LogOut className="w-4 h-4" />
